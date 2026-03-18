@@ -55,7 +55,7 @@ function App() {
       const ny = y + dy
       if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE) continue
       if (newBoard[ny][nx].color !== opponentColor) continue
-      const visited = new Set()
+      const visited = new Set<string>()
       const group: [number, number][] = []
       const stack: [number, number][] = [[nx, ny]]
       while (stack.length > 0) {
@@ -67,7 +67,7 @@ function App() {
         group.push([cx, cy])
         stack.push([cx - 1, cy], [cx + 1, cy], [cx, cy - 1], [cx, cy + 1])
       }
-      const groupVisited = new Set()
+      const groupVisited = new Set<string>()
       if (countLiberties(newBoard, nx, ny, opponentColor, groupVisited) === 0) {
         for (const [gx, gy] of group) {
           newBoard[gy][gx] = { color: null }
@@ -89,7 +89,7 @@ function App() {
     const { newBoard: boardAfterCapture, capturedCount } = removeCapturedStones(
       newBoard, x, y, opponent
     )
-    const visited = new Set()
+    const visited = new Set<string>()
     const selfLiberties = countLiberties(boardAfterCapture, x, y, currentPlayer, visited)
     if (selfLiberties === 0 && capturedCount === 0) {
       setMessage('자살수는 둘 수 없습니다.')
