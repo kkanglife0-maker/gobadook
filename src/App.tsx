@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 
 const BOARD_SIZE = 19
 
@@ -18,6 +18,97 @@ function App() {
   const [captured, setCaptured] = useState({ black: 0, white: 0 })
   const [message, setMessage] = useState('')
   const [passes, setPasses] = useState(0)
+
+  const styles = useMemo(() => ({
+    app: {
+      minHeight: '100vh',
+      padding: '20px',
+      backgroundColor: '#f5f5f5',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+    },
+    header: {
+      fontSize: '28px',
+      fontWeight: 'bold',
+      marginBottom: '16px',
+      color: '#1a1a1a',
+    },
+    status: {
+      fontSize: '18px',
+      marginBottom: '12px',
+      color: '#444',
+    },
+    captures: {
+      display: 'flex',
+      gap: '24px',
+      marginBottom: '12px',
+      fontSize: '16px',
+      color: '#555',
+    },
+    message: {
+      fontSize: '16px',
+      marginBottom: '16px',
+      color: '#666',
+      minHeight: '24px',
+    },
+    board: {
+      display: 'grid',
+      gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
+      gap: '1px',
+      backgroundColor: '#5c4033',
+      padding: '4px',
+      borderRadius: '4px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+      width: 'fit-content',
+    },
+    cell: {
+      width: '24px',
+      height: '24px',
+      backgroundColor: '#dcb35c',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    black: {
+      width: '18px',
+      height: '18px',
+      borderRadius: '50%',
+      backgroundColor: '#1a1a1a',
+      boxShadow: 'inset -2px -2px 4px rgba(255,255,255,0.1)',
+    },
+    white: {
+      width: '18px',
+      height: '18px',
+      borderRadius: '50%',
+      backgroundColor: '#fafafa',
+      boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.15), 1px 1px 2px rgba(0,0,0,0.1)',
+    },
+    controls: {
+      display: 'flex',
+      gap: '12px',
+      marginTop: '20px',
+    },
+    button: {
+      padding: '10px 24px',
+      fontSize: '16px',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontWeight: '500',
+      transition: 'all 0.2s',
+    },
+    passButton: {
+      backgroundColor: '#666',
+      color: 'white',
+    },
+    newGameButton: {
+      backgroundColor: '#4a90d9',
+      color: 'white',
+    },
+  }), [])
 
   const countLiberties = useCallback((
     board: GoStone[][],
@@ -115,36 +206,44 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <h1>Go Master: Baduk Academy</h1>
-      <div className="status">{currentPlayer === 'black' ? '검은' : '흰'} 차례</div>
-      <div className="captures">
+    <div style={styles.app}>
+      <h1 style={styles.header}>Go Master: Baduk Academy</h1>
+      <div style={styles.status}>{currentPlayer === 'black' ? '검은' : '흰'} 차례</div>
+      <div style={styles.captures}>
         <span>검은 돌 잡음: {captured.white}</span>
         <span>흰 돌 잡음: {captured.black}</span>
       </div>
-      <div className="message">{message || '게임을 시작하세요!'}</div>
-      <div className="board">
+      <div style={styles.message}>{message || '게임을 시작하세요!'}</div>
+      <div style={styles.board}>
         {board.map((row, y) => (
-          <div key={y} className="row">
+          <div key={y} style={{ display: 'contents' }}>
             {row.map((stone, x) => (
               <div
-                key={x}
-                className={`cell ${stone.color || ''}`}
+                key={`${x}-${y}`}
+                style={{
+                  ...styles.cell,
+                  backgroundColor: ((x + y) % 2 === 0) ? '#c4a35a' : '#dcb35c',
+                }}
                 onClick={() => handleStoneClick(x, y)}
-              />
+              >
+                {stone.color && <div style={styles[stone.color]} />}
+              </div>
             ))}
           </div>
         ))}
       </div>
-      <div className="controls">
-        <button onClick={handlePass}>패스</button>
-        <button onClick={() => {
-          setBoard(createEmptyBoard())
-          setCurrentPlayer('black')
-          setCaptured({ black: 0, white: 0 })
-          setMessage('새 게임을 시작합니다!')
-          setPasses(0)
-        }} className="new-game-btn">새 게임</button>
+      <div style={styles.controls}>
+        <button onClick={handlePass} style={{ ...styles.button, ...styles.passButton }}>패스</button>
+        <button
+          onClick={() => {
+            setBoard(createEmptyBoard())
+            setCurrentPlayer('black')
+            setCaptured({ black: 0, white: 0 })
+            setMessage('새 게임을 시작합니다!')
+            setPasses(0)
+          }}
+          style={{ ...styles.button, ...styles.newGameButton }}
+        >새 게임</button>
       </div>
     </div>
   )
