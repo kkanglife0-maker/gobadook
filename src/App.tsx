@@ -7,31 +7,23 @@ interface GoStone {
   color: 'black' | 'white' | null
 }
 
-interface GoBoard {
-  stones: GoStone[][]
-  currentPlayer: 'black' | 'white'
-  captured: { black: number; white: number }
-  passed: boolean
-  gameOver: boolean
-}
-
 const createEmptyBoard = (): GoStone[][] => {
-  return Array(BOARD_SIZE).fill(null).map(() => 
+  return Array(BOARD_SIZE).fill(null).map(() =>
     Array(BOARD_SIZE).fill({ color: null })
   )
 }
 
 function App() {
-  const [board, setBoard] = useState<GoStone[][]>(createEmptyBoard())
+  const [board, setBoard] = useState(createEmptyBoard())
   const [currentPlayer, setCurrentPlayer] = useState<'black' | 'white'>('black')
   const [captured, setCaptured] = useState({ black: 0, white: 0 })
-  const [message, setMessage] = useState<string>('')
+  const [message, setMessage] = useState('')
   const [passes, setPasses] = useState(0)
 
   const countLiberties = useCallback((
-    board: GoStone[][], 
-    x: number, 
-    y: number, 
+    board: GoStone[][],
+    x: number,
+    y: number,
     color: 'black' | 'white',
     visited: Set<string>
   ): number => {
@@ -39,11 +31,11 @@ function App() {
     const key = `${x},${y}`
     if (visited.has(key)) return 0
     visited.add(key)
-    
+
     const stone = board[y][x]
     if (stone.color === null) return 1
     if (stone.color !== color) return 0
-    
+
     let liberties = 0
     liberties += countLiberties(board, x - 1, y, color, visited)
     liberties += countLiberties(board, x + 1, y, color, visited)
@@ -57,7 +49,7 @@ function App() {
     x: number,
     y: number,
     opponentColor: 'black' | 'white'
-  ): GoStone[][] => {
+  ): { newBoard: GoStone[][], capturedCount: number } => {
     const newBoard = board.map(row => row.map(stone => ({ ...stone })))
     const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
     let capturedCount = 0
@@ -67,21 +59,22 @@ function App() {
       const ny = y + dy
       if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE) continue
       if (newBoard[ny][nx].color !== opponentColor) continue
-      
+
       const visited = new Set<string>()
       const group: [number, number][] = []
       const stack: [number, number][] = [[nx, ny]]
-      
+
       while (stack.length > 0) {
         const [cx, cy] = stack.pop()!
         const key = `${cx},${cy}`
         if (visited.has(key)) continue
         visited.add(key)
+
         if (newBoard[cy][cx].color !== opponentColor) continue
         group.push([cx, cy])
         stack.push([cx - 1, cy], [cx + 1, cy], [cx, cy - 1], [cx, cy + 1])
       }
-      
+
       const groupVisited = new Set<string>()
       if (countLiberties(newBoard, nx, ny, opponentColor, groupVisited) === 0) {
         for (const [gx, gy] of group) {
@@ -90,7 +83,6 @@ function App() {
         }
       }
     }
-    
     return { newBoard, capturedCount }
   }, [countLiberties])
 
@@ -105,7 +97,10 @@ function App() {
 
     const opponent = currentPlayer === 'black' ? 'white' : 'black'
     const { newBoard: boardAfterCapture, capturedCount } = removeCapturedStones(
-      newBoard, x, y, opponent
+      newBoard,
+      x,
+      y,
+      opponent
     )
 
     const visited = new Set<string>()
@@ -116,13 +111,10 @@ function App() {
     }
 
     setBoard(boardAfterCapture)
-    setCaptured(prev => ({
-      ...prev,
-      [opponent]: prev[opponent] + capturedCount
-    }))
+    setCaptured(prev => ({ ...prev, [opponent]: prev[opponent] + capturedCount }))
     setCurrentPlayer(opponent)
     setMessage(`${capturedCount > 0 ? `${capturedCount}개의 돌을 잡았습니다! ` : ''}${
-      opponent === 'black' ? '검은' : '흰' 
+      opponent === 'black' ? '검은' : '흰'
     } 차례입니다.`)
     setPasses(0)
   }
@@ -134,50 +126,57 @@ function App() {
       return
     }
     setPasses(newPasses)
+
     const nextPlayer = currentPlayer === 'black' ? 'white' : 'black'
     setCurrentPlayer(nextPlayer)
     setMessage(`${currentPlayer === 'black' ? '검은' : '흰'} 돌이 패스했습니다. ${
-      nextPlayer === 'black' ? '검은' : '흰'} 차례입니다.`)
+      nextPlayer === 'black' ? '검은' : '흰' 
+    } 차례입니다.`)
   }
 
   return (
-    <div className="app-container">
-      <h1>Go Master: Baduk Academy</h1>
+    <div className="app">
+      <header className="app-header">
+        <h1>Go Master: Baduk Academy</h1>
+      </header>
+
       <div className="game-info">
-        <span className={`current-player ${currentPlayer}`}>
+        <div className="current-player">
           {currentPlayer === 'black' ? '검은' : '흰'} 차례
-        </span>
-        <span>검은 돌 잡음: {captured.white}</span>
-        <span>흰 돌 잡음: {captured.black}</span>
+        </div>
+        <div className="captured">
+          <span>검은 돌 잡음: {captured.white}</span>
+          <span>흰 돌 잡음: {captured.black}</span>
+        </div>
       </div>
-      <p className="message">{message || '게임을 시작하세요!'}</p>
+
+      <div className="message">
+        {message || '게임을 시작하세요!'}
+      </div>
+
       <div className="board">
         {board.map((row, y) => (
-          <div key={y} className="board-row">
+          <div className="row" key={y}>
             {row.map((stone, x) => (
               <div
-                key={`${x}-${y}`}
-                className={`cell ${stone.color || ''}`}
+                key={`${x},${y}`}
+                className={`cell stone-${stone.color || 'empty'}`}
                 onClick={() => handleStoneClick(x, y)}
               />
             ))}
           </div>
         ))}
       </div>
+
       <div className="controls">
         <button onClick={handlePass} className="pass-btn">패스</button>
-        <button 
-          onClick={() => { 
-            setBoard(createEmptyBoard())
-            setCurrentPlayer('black')
-            setCaptured({ black: 0, white: 0 })
-            setMessage('새 게임을 시작합니다!')
-            setPasses(0)
-          }}
-          className="new-game-btn"
-        >
-          새 게임
-        </button>
+        <button onClick={() => {
+          setBoard(createEmptyBoard())
+          setCurrentPlayer('black')
+          setCaptured({ black: 0, white: 0 })
+          setMessage('새 게임을 시작합니다!')
+          setPasses(0)
+        }} className="new-game-btn">새 게임</button>
       </div>
     </div>
   )
