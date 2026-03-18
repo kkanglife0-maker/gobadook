@@ -1,0 +1,5 @@
+{
+  "name": "Go Master: Baduk Academy",
+  "description": "A minimal and educational Go (Baduk) platform featuring rank-based progression, game history, and terminology quizzes for all ages.",
+  "requestFramePermissions": []
+}
