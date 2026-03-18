@@ -34,3 +34,5 @@ yarn-error.log*
 
 # vite
 *.local
+
+# Deploy trigger
